@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,11 +9,13 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowRight, BarChart3, Calculator, FileStack, Info } from "lucide-react";
 import TaxProjectionPage from "./TaxProjection";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 export default function Index() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("inicio");
+  const navigate = useNavigate();
 
   return (
     <motion.div 
@@ -56,20 +57,12 @@ export default function Index() {
               >
                 Projeção Tributária
               </a>
-              <a 
-                href="#" 
+              <Link 
+                to="/tax-reform" 
                 className="text-sm font-medium text-slate-700 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400 transition-colors"
-                onClick={(e) => {
-                  e.preventDefault();
-                  toast({
-                    title: "Em desenvolvimento",
-                    description: "Esta funcionalidade estará disponível em breve.",
-                    duration: 3000,
-                  });
-                }}
               >
                 Sobre a Reforma
-              </a>
+              </Link>
             </nav>
             <div className="md:hidden">
               <Button variant="ghost" size="icon" className="text-slate-700 dark:text-slate-300">
