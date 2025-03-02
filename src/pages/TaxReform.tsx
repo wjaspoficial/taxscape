@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { FileText, Info, AlertTriangle, HelpCircle, BookOpen, Calculator } from "lucide-react";
+import { FileText, Info, AlertTriangle, HelpCircle, BookOpen, Calculator, ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function TaxReform() {
   return (
@@ -19,7 +20,15 @@ export default function TaxReform() {
       transition={{ duration: 0.5 }}
       className="container mx-auto px-4 py-8 max-w-6xl"
     >
-      <div className="mb-10">
+      <div className="mb-8">
+        <Link 
+          to="/" 
+          className="inline-flex items-center text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Voltar para a página inicial
+        </Link>
+        
         <motion.div 
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
