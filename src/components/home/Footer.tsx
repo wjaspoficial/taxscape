@@ -11,9 +11,19 @@ export const Footer: React.FC = () => {
             <Calculator className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
             <p className="text-sm font-medium text-slate-900 dark:text-white">TaxScape</p>
           </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            © {new Date().getFullYear()} TaxScape. Todas as projeções são estimativas baseadas nas informações disponíveis.
-          </p>
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <a 
+              href="https://astradigitals.lovable.app" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+            >
+              Astra Digitals
+            </a>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              © {new Date().getFullYear()} TaxScape. Todas as projeções são estimativas baseadas nas informações disponíveis.
+            </p>
+          </div>
         </div>
       </div>
     </footer>

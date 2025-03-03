@@ -4,11 +4,9 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Info } from "lucide-react";
 import { motion } from "framer-motion";
-import { useToast } from "@/components/ui/use-toast";
+import { Link } from "react-router-dom";
 
 export const ReformInfo: React.FC = () => {
-  const { toast } = useToast();
-
   return (
     <motion.section 
       initial={{ y: 20, opacity: 0 }}
@@ -88,15 +86,11 @@ export const ReformInfo: React.FC = () => {
           variant="outline" 
           size="lg"
           className="rounded-full border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 dark:border-indigo-900 dark:text-indigo-400 dark:hover:bg-indigo-950"
-          onClick={() => {
-            toast({
-              title: "Em desenvolvimento",
-              description: "Conteúdo detalhado sobre a reforma tributária estará disponível em breve.",
-              duration: 3000,
-            });
-          }}
+          asChild
         >
-          Saiba mais sobre a reforma
+          <Link to="/tax-reform">
+            Saiba mais sobre a reforma
+          </Link>
         </Button>
       </div>
     </motion.section>
