@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { Calculator, Download, HelpCircle, BarChart3 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // Interface para os dados da empresa
 interface CompanyData {
@@ -290,6 +291,156 @@ const TaxProjectionPage = () => {
   
   const taxDifference = calculateTaxDifference();
   
+  // New function to generate and export PDF report
+  const generateReport = () => {
+    if (!projectionResult) {
+      toast({
+        title: "Nenhuma projeção calculada",
+        description: "Por favor, calcule uma projeção primeiro.",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+
+    try {
+      // Create new PDF document
+      const doc = new jsPDF();
+      const currentDate = new Date().toLocaleDateString('pt-BR');
+      
+      // Add title and header
+      doc.setFontSize(20);
+      doc.setTextColor(64, 70, 229); // Indigo color
+      doc.text("TaxScape - Relatório de Projeção Tributária", 14, 22);
+      
+      doc.setFontSize(11);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Gerado em: ${currentDate}`, 14, 30);
+      
+      // Company information
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Dados da Empresa", 14, 45);
+      
+      const sectorMapping = {
+        comercio: "Comércio",
+        servicos: "Serviços",
+        industria: "Indústria"
+      };
+      
+      const stateMapping = {
+        sp: "São Paulo",
+        rj: "Rio de Janeiro",
+        mg: "Minas Gerais",
+        rs: "Rio Grande do Sul",
+        pr: "Paraná",
+        outros: "Outros"
+      };
+      
+      autoTable(doc, {
+        startY: 50,
+        head: [['Parâmetro', 'Valor']],
+        body: [
+          ['Faturamento Anual', `R$ ${companyData.revenue.toLocaleString('pt-BR')}`],
+          ['Despesas Dedutíveis', `R$ ${companyData.expenses.toLocaleString('pt-BR')}`],
+          ['Setor de Atuação', sectorMapping[companyData.sector as keyof typeof sectorMapping]],
+          ['Estado', stateMapping[companyData.state as keyof typeof stateMapping]],
+          ['Regime Simplificado', companyData.simplified ? 'Sim' : 'Não']
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [93, 94, 229], textColor: [255, 255, 255] },
+        alternateRowStyles: { fillColor: [245, 247, 250] }
+      });
+      
+      // Summary section
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Resumo da Projeção", 14, doc.lastAutoTable.finalY + 20);
+      
+      const currentTotal = projectionResult.currentYear.total;
+      const finalTotal = projectionResult.projectedYears[projectionResult.projectedYears.length - 1].total;
+      const difference = ((finalTotal - currentTotal) / currentTotal) * 100;
+      
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 25,
+        head: [['Métrica', 'Valor']],
+        body: [
+          ['Carga Tributária Atual', `R$ ${currentTotal.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`],
+          ['Carga Tributária Projetada', `R$ ${finalTotal.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`],
+          ['Variação Percentual', `${difference >= 0 ? '+' : ''}${difference.toFixed(2)}%`]
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [93, 94, 229], textColor: [255, 255, 255] },
+        alternateRowStyles: { fillColor: [245, 247, 250] }
+      });
+      
+      // Detailed projection
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Detalhamento por Período", 14, doc.lastAutoTable.finalY + 20);
+      
+      // Create table data for projection years
+      const tableData = projectionResult.projectedYears.map(year => [
+        year.year.toString(),
+        `R$ ${year.total.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`,
+        `R$ ${(year.pis + year.cofins).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`,
+        `R$ ${(year.icms + year.iss + year.ipi).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`,
+        `R$ ${(year.ibs + year.cbs + year.is).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`
+      ]);
+      
+      // Insert current year as first row
+      tableData.unshift([
+        new Date().getFullYear().toString(),
+        `R$ ${projectionResult.currentYear.total.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`,
+        `R$ ${(projectionResult.currentYear.pis + projectionResult.currentYear.cofins).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`,
+        `R$ ${(projectionResult.currentYear.icms + projectionResult.currentYear.iss + projectionResult.currentYear.ipi).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`,
+        `R$ 0,00`
+      ]);
+      
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 25,
+        head: [['Ano', 'Total', 'PIS/Cofins', 'ICMS/ISS/IPI', 'IBS/CBS/IS']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [93, 94, 229], textColor: [255, 255, 255] },
+        columnStyles: {
+          0: { cellWidth: 20 },
+          1: { cellWidth: 40 },
+          2: { cellWidth: 40 },
+          3: { cellWidth: 40 },
+          4: { cellWidth: 40 }
+        }
+      });
+      
+      // Footer
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(9);
+        doc.setTextColor(150, 150, 150);
+        doc.text('TaxScape - Análise de Impacto da Reforma Tributária', 14, doc.internal.pageSize.height - 10);
+        doc.text(`Página ${i} de ${pageCount}`, doc.internal.pageSize.width - 35, doc.internal.pageSize.height - 10);
+      }
+      
+      // Save the PDF
+      doc.save(`TaxScape_Projecao_${currentDate.replace(/\//g, '-')}.pdf`);
+      
+      toast({
+        title: "Relatório gerado com sucesso",
+        description: "O PDF foi baixado para o seu dispositivo.",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Erro ao gerar relatório:", error);
+      toast({
+        title: "Erro ao gerar relatório",
+        description: "Ocorreu um problema. Por favor, tente novamente.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+  
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -458,13 +609,7 @@ const TaxProjectionPage = () => {
                   variant="outline" 
                   size="sm" 
                   className="w-full mt-4 border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 dark:border-indigo-900 dark:text-indigo-400 dark:hover:bg-indigo-950"
-                  onClick={() => {
-                    toast({
-                      title: "Em desenvolvimento",
-                      description: "Exportação de relatório estará disponível em breve.",
-                      duration: 3000,
-                    });
-                  }}
+                  onClick={generateReport}
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Exportar Relatório
